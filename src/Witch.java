@@ -3,7 +3,6 @@ import java.util.UUID;
 public class Witch extends Thread {
 
     private final int witchNumber;
-    private int acquiredMutex = 0;
 
     public Witch(int witchNumber) {
         this.witchNumber = witchNumber;
@@ -13,7 +12,6 @@ public class Witch extends Thread {
 
         while (true) {
             Main.getMutex().acquireUninterruptibly();
-            acquiredMutex = 1;
 
             String guid = UUID.randomUUID().toString();
 
@@ -25,15 +23,13 @@ public class Witch extends Thread {
             } else {
                 Main.setNumberOfWitchesWaiting(Main.getNumberOfWitchesWaiting() + 1);
                 Main.getMutex().release();
-                acquiredMutex = 0;
                 Main.getWitch().acquireUninterruptibly();
 
                 Main.getMutex().acquireUninterruptibly();
-                acquiredMutex = 1;
+                int acquiredMutex = 1;
                 while (isNotAllowedToEnter()) {
                     if (acquiredMutex == 1) {
                         Main.getMutex().release();
-                        acquiredMutex = 0;
                     }
 
                     Main.getWitch().acquireUninterruptibly();
@@ -50,20 +46,18 @@ public class Witch extends Thread {
             }
 
             Main.getMutex().acquireUninterruptibly();
-            acquiredMutex = 1;
 
             if (Main.getNumberOfWitchesInHouse() > 0) {
-                System.out.printf(
-                        "Witch %s is leaving, current cat count: %s, current hunter count: %s %n",
-                        witchNumber,
-                        Main.getNumberOfCatsInHouse(),
-                        Main.getNumberOfHuntersInHouse()
-                );
-//                System.out.println("witch " + witchNumber + " is leaving");
 
                 Main.setNumberOfWitchesInHouse(Main.getNumberOfWitchesInHouse() - 1);
 
-                System.out.println("witch " + witchNumber + " has left with GUID: " + guid);
+                System.out.printf(
+                        "Witch %s has left, current cat count: %s, current hunter count: %s, with GUID: %s %n",
+                        witchNumber,
+                        Main.getNumberOfCatsInHouse(),
+                        Main.getNumberOfHuntersInHouse(),
+                        guid
+                );
 
                 if (Main.getNumberOfWitchesInHouse() == 0) {
                     if (Main.getNumberOfCatsWaiting() > 0) {
@@ -74,13 +68,15 @@ public class Witch extends Thread {
                         Main.setNumberOfWitchesWaiting(0);
                         Main.getWitch().release();
                     }
+                    if (Main.getNumberOfHuntersWaiting() > 0) {
+                        Main.setNumberOfHuntersWaiting(0);
+                        Main.getHunter().release();
+                    }
                 }
 
                 Main.getMutex().release();
-                acquiredMutex = 0;
             } else {
                 Main.getMutex().release();
-                acquiredMutex = 0;
             }
         }
     }
@@ -92,19 +88,16 @@ public class Witch extends Thread {
     }
 
     private void enterTheHouse(String guid) {
-        System.out.printf(
-                "Witch %s is entering, current cat count: %s, current hunter count: %s %n",
-                witchNumber,
-                Main.getNumberOfCatsInHouse(),
-                Main.getNumberOfHuntersInHouse()
-        );
-//                System.out.println("witch " + witchNumber + " is entering");
-
         Main.setNumberOfWitchesInHouse(Main.getNumberOfWitchesInHouse() + 1);
 
-        System.out.println("witch " + witchNumber + " has entered with GUID: " + guid);
+        System.out.printf(
+                "Witch %s has entered, current cat count: %s, current hunter count: %s, with GUID: %s %n",
+                witchNumber,
+                Main.getNumberOfCatsInHouse(),
+                Main.getNumberOfHuntersInHouse(),
+                guid
+        );
 
         Main.getMutex().release();
-        acquiredMutex = 0;
     }
 }

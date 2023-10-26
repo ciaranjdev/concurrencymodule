@@ -43,15 +43,6 @@ public class Main {
         hunter3.start();
     }
 
-//    public static void printNumberOfWaiting(String location) {
-//        System.out.printf(
-//                "Cats waiting: %s, witches waiting: %s, hunters waiting: %s %n",
-//                numberOfCatsWaiting,
-//                numberOfWitchesWaiting,
-//                numberOfHuntersWaiting
-//        );
-//    }
-
     public static Semaphore getWitch() {
         return witch;
     }
